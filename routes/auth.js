@@ -1,34 +1,106 @@
+console.log('✅ AUTH ROUTER CARGADO');
+
 const express = require('express');
 const router = express.Router();
 
-const authMiddleware = require('../middleware/auth');
+// ✅ CONTROLLER
+const authController = require('../controllers/authController');
 
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// ✅ MIDDLEWARE
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Email y password son obligatorios'
-    });
-  }
+// ✅ VALIDADORES
+const {
+  registerValidator,
+  loginValidator
+} = require('../validators/authValidator');
 
-  if (email === 'test@test.com' && password === '123456') {
-    return res.json({
-      message: 'Login correcto',
-      user: { email }
-    });
-  }
+// ======================
+// VALIDAR SECRET
+// ======================
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET no definido');
+}
 
-  res.status(401).json({
-    error: 'Credenciales incorrectas'
-  });
-});
+// ======================
+// 🔐 REGISTER
+// ======================
+router.post(
+  '/register',
+  registerValidator,
+  authController.register
+);
 
-router.get('/profile', authMiddleware, (req, res) => {
-  res.json({
-    message: 'Ruta protegida OK',
-    user: req.user
-  });
-});
+// ======================
+// 🔑 LOGIN
+// ======================
+router.post(
+  '/login',
+  loginValidator,
+  authController.login
+);
+
+// ======================
+// 🔁 REFRESH TOKEN
+// ======================
+router.post(
+  '/refresh',
+  authController.refresh
+);
+
+// ======================
+// 🚪 LOGOUT (una sesión)
+// ======================
+router.post(
+  '/logout',
+  authController.logout
+);
+
+// ======================
+// 🌍 LOGOUT GLOBAL (🔥 NUEVO)
+// ======================
+router.post(
+  '/logout-all',
+  authMiddleware,
+  authController.logoutAll
+);
+
+// ======================
+// 📱 LISTAR SESIONES (🔥 NUEVO)
+// ======================
+router.get(
+  '/sessions',
+  authMiddleware,
+  authController.sessions
+);
+
+// ======================
+// ❌ LOGOUT POR SESIÓN (🔥 CLAVE)
+// ======================
+router.delete(
+  '/sessions/:sessionId',
+  authMiddleware,
+  authController.logoutSession
+);
+
+// ======================
+// 🔒 PERFIL
+// ======================
+router.get(
+  '/perfil',
+  authMiddleware,
+  authController.perfil
+);
+
+// ======================
+// 👑 ADMIN
+// ======================
+router.get(
+  '/admin',
+  authMiddleware,
+  roleMiddleware('admin'),
+  authController.admin
+);
 
 module.exports = router;

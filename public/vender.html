@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Publicar Propiedad - Dhomei</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+}
+
+.container{
+max-width:650px;
+margin:60px auto;
+background:white;
+padding:40px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,.1);
+}
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border-radius:6px;
+border:1px solid #ddd;
+}
+
+button{
+background:#ff9800;
+border:none;
+padding:12px;
+color:white;
+border-radius:6px;
+cursor:pointer;
+width:100%;
+font-size:15px;
+}
+
+button:hover{
+background:#ffa726;
+}
+
+.message{
+margin-top:15px;
+font-weight:bold;
+text-align:center;
+}
+
+</style>
+</head>
+
+<!-- ✅ ROLE ACCESS -->
+<body data-role="user,admin">
+
+<!-- ✅ NAVBAR GLOBAL -->
+<header id="navbar-container"></header>
+
+<div class="container">
+
+<h2>Publicar Propiedad</h2>
+
+<form id="propertyForm">
+
+<input id="title" placeholder="Título del aviso" required>
+
+<input id="location"
+placeholder="Ubicación (Distrito / Ciudad)"
+required>
+
+<input id="price"
+type="number"
+placeholder="Precio"
+required>
+
+<textarea id="description"
+placeholder="Descripción"></textarea>
+
+<button type="submit">
+Publicar Propiedad
+</button>
+
+</form>
+
+<div id="message" class="message"></div>
+
+</div>
+
+<!-- ========================= -->
+<!-- NAVBAR -->
+<!-- ========================= -->
+<script src="js/navbar.js"></script>
+
+<script>
+
+/* =========================
+   VALIDAR SESIÓN REAL
+========================= */
+
+const token = localStorage.getItem("token");
+
+async function validateSession(){
+
+if(!token){
+window.location.href="login.html";
+return;
+}
+
+try{
+
+const res = await fetch(
+"http://localhost:3001/api/auth/perfil",
+{
+headers:{
+Authorization:"Bearer "+token
+}
+});
+
+if(!res.ok) throw new Error();
+
+const data = await res.json();
+
+localStorage.setItem(
+"user",
+JSON.stringify(data.user)
+);
+
+}catch{
+
+localStorage.clear();
+window.location.href="login.html";
+
+}
+
+}
+
+validateSession();
+
+
+/* =========================
+   PUBLICAR PROPIEDAD
+========================= */
+
+document
+.getElementById("propertyForm")
+.addEventListener("submit",
+async function(e){
+
+e.preventDefault();
+
+const message =
+document.getElementById("message");
+
+message.innerText="Publicando...";
+
+try{
+
+const res=await fetch(
+"http://localhost:3001/api/properties",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+token
+},
+body:JSON.stringify({
+title:title.value,
+location:location.value,
+price:price.value,
+description:description.value
+})
+});
+
+const data=await res.json();
+
+if(!res.ok)
+throw new Error(data.error);
+
+message.innerText=
+"✅ Propiedad publicada correctamente";
+
+setTimeout(()=>{
+window.location.href="dashboard.html";
+},1200);
+
+}catch(err){
+
+message.innerText=err.message;
+
+}
+
+});
+
+</script>
+
+<!-- ========================= -->
+<!-- 🔐 SEGURIDAD GLOBAL -->
+<!-- ========================= -->
+<script src="js/guard-global.js"></script>
+<script src="js/role-guard.js"></script>
+
+</body>
+</html>

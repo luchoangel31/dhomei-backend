@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dhomei - Mi Perfil</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<!-- ✅ ACCESO POR ROLES -->
+<body data-role="user,admin">
+
+<!-- ✅ NAVBAR GLOBAL -->
+<header id="navbar-container"></header>
+
+<div class="container profile-container">
+
+<div class="card">
+
+<h2>Mi Perfil</h2>
+
+<p>
+<strong>Email:</strong>
+<span id="email">Cargando...</span>
+</p>
+
+<p>
+<strong>Rol:</strong>
+<span id="role">Cargando...</span>
+</p>
+
+<div class="profile-actions">
+
+<button onclick="logout()">
+Cerrar sesión
+</button>
+
+<button id="adminBtn"
+onclick="goAdmin()">
+Panel Admin
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+<!-- NAVBAR -->
+<!-- ========================= -->
+<script src="js/navbar.js"></script>
+
+<script>
+
+/* ===============================
+   VALIDAR SESIÓN REAL
+=============================== */
+
+const token = localStorage.getItem("token");
+
+async function loadProfile(){
+
+if(!token){
+window.location.href="login.html";
+return;
+}
+
+try{
+
+const res = await fetch(
+"http://localhost:3001/api/auth/perfil",
+{
+headers:{
+Authorization:"Bearer "+token
+}
+});
+
+if(!res.ok) throw new Error();
+
+const data = await res.json();
+
+/* ✅ guardar usuario global */
+localStorage.setItem(
+"user",
+JSON.stringify(data.user)
+);
+
+/* ✅ pintar datos */
+document.getElementById("email")
+.textContent = data.user.email;
+
+document.getElementById("role")
+.textContent = data.user.role;
+
+
+/* ✅ CONTROL ADMIN VISUAL */
+if(data.user.role !== "admin"){
+
+const btn =
+document.getElementById("adminBtn");
+
+btn.style.display="none";
+
+}
+
+}catch{
+
+localStorage.clear();
+window.location.href="login.html";
+
+}
+
+}
+
+loadProfile();
+
+
+/* ===============================
+   LOGOUT
+=============================== */
+function logout(){
+
+localStorage.clear();
+window.location.href="index.html";
+
+}
+
+
+/* ===============================
+   ADMIN PANEL
+=============================== */
+function goAdmin(){
+window.location.href="admin.html";
+}
+
+</script>
+
+<!-- ========================= -->
+<!-- 🔐 SEGURIDAD GLOBAL -->
+<!-- ========================= -->
+<script src="js/guard-global.js"></script>
+<script src="js/role-guard.js"></script>
+
+</body>
+</html>

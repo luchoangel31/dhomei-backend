@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dhomei | Buscar en Mapa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- ✅ CSS GLOBAL -->
+<link rel="stylesheet" href="css/style.css">
+
+<!-- MAPA -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+body{margin:0;font-family:Arial;}
+
+#map{
+  width:100%;
+  height:calc(100vh - 70px);
+}
+
+/* barra superior interna del mapa */
+.map-topbar{
+background:#0A2540;
+color:white;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:12px 20px;
+}
+
+.map-topbar button{
+margin-left:8px;
+padding:8px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.primary{
+background:#ffffff;
+color:#0A2540;
+font-weight:bold;
+}
+
+.secondary{
+background:#dddddd;
+color:#333;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ✅ NAVBAR GLOBAL -->
+<header id="navbar-container"></header>
+
+<!-- ✅ SUB BARRA MAPA -->
+<div class="map-topbar">
+ <div><strong>Dhomei • Buscar en Mapa</strong></div>
+
+ <div>
+  <button class="secondary"
+    onclick="window.location.href='comprar.html'">
+    ← Volver
+  </button>
+
+  <button class="primary"
+    onclick="window.location.href='comprar-lista.html'">
+    Ver Bandeja
+  </button>
+ </div>
+</div>
+
+<div id="map"></div>
+
+<!-- ✅ NAVBAR SCRIPT GLOBAL -->
+<script src="js/navbar.js"></script>
+
+<script>
+/* ===========================
+   MAPA
+=========================== */
+
+const p = new URLSearchParams(window.location.search);
+
+let lat = parseFloat(p.get("lat"));
+let lon = parseFloat(p.get("lon"));
+
+let msg;
+
+if(isNaN(lat)||isNaN(lon)){
+ lat=-12.0464;
+ lon=-77.0428;
+ msg="Mostrando Lima";
+}else{
+ msg="Propiedades cerca de ti";
+}
+
+const map=L.map('map').setView([lat,lon],14);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{maxZoom:19}
+).addTo(map);
+
+L.marker([lat,lon])
+.addTo(map)
+.bindPopup(msg)
+.openPopup();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dhomei - Plataforma Inmobiliaria</title>
+
+<!-- ✅ ESTILO GLOBAL -->
+<link rel="stylesheet" href="css/styles.css">
+
+<style>
+/* HERO */
+.hero{
+    background:#101738;
+    color:white;
+    padding:90px 40px;
+    text-align:center;
+}
+.hero h2{margin:0 0 10px;font-size:36px;}
+.hero p{margin:0;font-size:18px;opacity:.85;}
+
+footer{
+    text-align:center;
+    padding:22px;
+    background:#0a0f29;
+    color:white;
+    margin-top:60px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="logo">Dhomei</div>
+
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="comprar.html">Comprar</a>
+        <a href="alquilar.html">Alquilar</a>
+        <a href="contacto.html">Contacto</a>
+
+        <!-- Publicar -->
+        <a href="dashboard.html" id="publishLink" class="btn-publish">
+            Publicar Aviso
+        </a>
+
+        <!-- Invitado -->
+        <div class="dropdown" id="guestMenu">
+            <span class="dropdown-toggle">Ingresar ▾</span>
+            <div class="dropdown-menu">
+                <button onclick="location.href='login.html'">Iniciar Sesión</button>
+                <button onclick="location.href='registro.html'">Registrarme</button>
+            </div>
+        </div>
+
+        <!-- Usuario -->
+        <div class="dropdown" id="userMenu" style="display:none;">
+            <span class="dropdown-toggle" id="userName">Hola ▾</span>
+            <div class="dropdown-menu" id="userDropdown"></div>
+        </div>
+    </nav>
+</header>
+
+<section class="hero">
+    <h2>Soluciones Inmobiliarias Premium</h2>
+    <p>Acompañamos cada decisión importante con tecnología, experiencia y confianza.</p>
+</section>
+
+<footer>
+    © 2026 Dhomei | Plataforma inmobiliaria
+</footer>
+
+<script>
+// ==========================
+// NAVBAR INTELIGENTE
+// ==========================
+
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user"));
+
+const guestMenu = document.getElementById("guestMenu");
+const userMenu = document.getElementById("userMenu");
+const publishLink = document.getElementById("publishLink");
+
+if(token && user){
+
+    guestMenu.style.display = "none";
+    userMenu.style.display = "block";
+    publishLink.style.display = "inline-block";
+
+    document.getElementById("userName").innerText = `Hola ${user.email} ▾`;
+
+    const dropdown = document.getElementById("userDropdown");
+
+    dropdown.innerHTML = `
+        <button onclick="location.href='dashboard.html'">Mi Panel</button>
+        ${user.role === 'admin' ? `<button onclick="location.href='admin.html'">Panel Admin</button>` : ``}
+        <button onclick="logout()">Cerrar sesión</button>
+    `;
+}else{
+    publishLink.style.display = "none";
+}
+
+function logout(){
+    localStorage.clear();
+    location.reload();
+}
+</script>
+
+</body>
+</html>

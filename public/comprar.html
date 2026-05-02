@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhomei - Comprar</title>
+
+<!-- ✅ ESTILO GLOBAL -->
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f6fa;
+}
+
+.container{
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
+}
+
+h2{
+  margin-bottom:30px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:white;
+  border-radius:12px;
+  box-shadow:0 8px 25px rgba(0,0,0,.1);
+  overflow:hidden;
+  transition:.25s;
+  cursor:pointer;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+}
+
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.card-body{
+  padding:15px;
+}
+
+.card-body h3{
+  margin:0 0 8px;
+}
+
+.price{
+  color:#0a0f29;
+  font-weight:bold;
+  font-size:18px;
+}
+
+.message{
+  text-align:center;
+  margin-top:40px;
+  font-size:18px;
+  color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ✅ NAVBAR GLOBAL -->
+<header id="navbar-container"></header>
+
+<div class="container">
+
+  <h2>Propiedades en venta</h2>
+
+  <div class="grid" id="propertiesGrid"></div>
+
+  <div class="message" id="message"></div>
+
+</div>
+
+<!-- ✅ NAVBAR DINÁMICO -->
+<script src="js/navbar.js"></script>
+
+<script>
+
+/* ===========================
+   CARGAR PROPIEDADES
+=========================== */
+
+async function loadProperties(){
+
+  try{
+
+    const res =
+      await fetch("http://localhost:3001/api/properties");
+
+    const data = await res.json();
+
+    const grid =
+      document.getElementById("propertiesGrid");
+
+    const message =
+      document.getElementById("message");
+
+    grid.innerHTML="";
+    message.innerHTML="";
+
+    if(!data.length){
+      message.innerHTML =
+        "No hay propiedades disponibles.";
+      return;
+    }
+
+    data.forEach(p=>{
+
+      const card=document.createElement("div");
+      card.className="card";
+
+      /* ✅ preparado para futuro detalle */
+      card.onclick=()=>{
+        window.location.href=
+          `property.html?id=${p.id}`;
+      };
+
+      card.innerHTML=`
+        <img src="https://picsum.photos/400/300?random=${p.id}">
+        <div class="card-body">
+          <h3>${p.title}</h3>
+          <p>${p.location}</p>
+          <p class="price">
+            S/ ${Number(p.price).toLocaleString()}
+          </p>
+        </div>
+      `;
+
+      grid.appendChild(card);
+    });
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("message")
+      .innerHTML="Error cargando propiedades.";
+  }
+}
+
+loadProperties();
+
+</script>
+
+</body>
+</html>

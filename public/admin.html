@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dhomei - Panel Admin</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+}
+
+header{
+background:#0a0f29;
+color:white;
+padding:15px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+nav a{
+color:white;
+margin-left:20px;
+text-decoration:none;
+}
+
+.container{
+max-width:700px;
+margin:70px auto;
+background:white;
+padding:40px;
+border-radius:18px;
+box-shadow:0 10px 30px rgba(0,0,0,.1);
+}
+
+.card{
+background:#f2f2f2;
+padding:20px;
+border-radius:10px;
+margin:15px 0;
+}
+
+button{
+padding:10px 14px;
+background:#0a0f29;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+</style>
+
+</head>
+
+<!-- ✅ SOLO ADMIN PUEDE ENTRAR -->
+<body data-role="admin">
+
+<header>
+<h1>Dhomei - Admin 👑</h1>
+
+<nav>
+<a href="dashboard.html">Dashboard</a>
+<a href="perfil.html">Perfil</a>
+<a href="#" onclick="logout()">Salir</a>
+</nav>
+</header>
+
+<div class="container">
+
+<h2>Panel de Administración</h2>
+
+<div class="card" id="adminInfo">
+Cargando información...
+</div>
+
+<div class="card">
+
+<h3>Acciones rápidas</h3>
+
+<button onclick="manageUsers()">
+Gestionar Usuarios
+</button>
+
+<button onclick="manageProperties()">
+Gestionar Propiedades
+</button>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+<!-- VALIDACIÓN ADMIN REAL -->
+<!-- ========================= -->
+<script>
+
+const token = localStorage.getItem("token");
+
+async function loadAdmin(){
+
+if(!token){
+window.location.href="login.html";
+return;
+}
+
+try{
+
+const res = await fetch(
+"http://localhost:3001/api/auth/perfil",
+{
+headers:{
+Authorization:"Bearer "+token
+}
+});
+
+if(!res.ok) throw new Error();
+
+const data = await res.json();
+
+/* guardar usuario global */
+localStorage.setItem(
+"user",
+JSON.stringify(data.user)
+);
+
+/* mostrar info */
+document.getElementById("adminInfo")
+.innerHTML = `
+<strong>Administrador:</strong><br>
+${data.user.email}
+`;
+
+}catch{
+
+localStorage.clear();
+window.location.href="login.html";
+
+}
+
+}
+
+loadAdmin();
+
+
+/* =========================
+   LOGOUT
+========================= */
+function logout(){
+
+localStorage.clear();
+window.location.href="index.html";
+
+}
+
+
+/* =========================
+   FUTURAS FUNCIONES ADMIN
+========================= */
+
+function manageUsers(){
+alert("Módulo gestión de usuarios próximamente");
+}
+
+function manageProperties(){
+alert("Módulo gestión de propiedades próximamente");
+}
+
+</script>
+
+<!-- ========================= -->
+<!-- 🔐 SEGURIDAD GLOBAL -->
+<!-- ========================= -->
+<script src="js/guard-global.js"></script>
+<script src="js/role-guard.js"></script>
+
+</body>
+</html>

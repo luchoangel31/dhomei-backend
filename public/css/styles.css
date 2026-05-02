@@ -1,28 +1,167 @@
+/* =========================
+   TU CSS EXISTENTE
+========================= */
+
 html {
-    height: 100%;
-    width: 100%;
-  }
-  
-  body {
-    display: table;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-  }
-  
-  .row {
-    display: table-row;
-    height: 75%;
-    background-color: #282828;
-    text-align: center;
-  }
-  
-  .h1 {
-    font-size: 54px;
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(to right, #FFFFFF 0%, #FF6600 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-top: 100px;
-  }
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  display: table;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.row {
+  display: table-row;
+  height: 75%;
+  background-color: #282828;
+  text-align: center;
+}
+
+.h1 {
+  font-size: 54px;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(to right, #FFFFFF 0%, #FF6600 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-top: 100px;
+}
+
+
+/* =========================
+   ✅ RESET GLOBAL
+========================= */
+
+*{
+  box-sizing:border-box;
+  font-family: Arial, sans-serif;
+}
+
+body{
+  margin:0;
+  background:#f5f6fa;
+}
+
+
+/* =========================
+   ✅ NAVBAR GLOBAL DHOMEI
+========================= */
+
+.main-header{
+  background:#0a0f29;
+  color:white;
+  padding:15px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:999;
+}
+
+.main-header h1{
+  margin:0;
+  font-size:22px;
+}
+
+.main-header nav{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+
+.main-header nav a{
+  color:white;
+  text-decoration:none;
+  font-size:15px;
+  transition:0.2s;
+}
+
+.main-header nav a:hover{
+  opacity:.7;
+}
+
+
+/* =========================
+   ✅ BOTONES NAVBAR
+========================= */
+
+.nav-btn{
+  background:#ff9800;
+  padding:8px 14px;
+  border-radius:6px;
+  color:white;
+  text-decoration:none;
+}
+
+.nav-btn:hover{
+  background:#ffa726;
+}
+
+
+/* =========================
+   ✅ CONTENEDORES GENERALES
+========================= */
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+
+/* =========================
+   ✅ CARDS GLOBAL
+========================= */
+
+.card{
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+
+/* =========================
+   ✅ FORMULARIOS
+========================= */
+
+input,
+textarea,
+select{
+  width:100%;
+  padding:10px;
+  margin-bottom:12px;
+  border-radius:6px;
+  border:1px solid #ddd;
+}
+
+button{
+  background:#0a0f29;
+  color:white;
+  border:none;
+  padding:12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+
+/* =========================
+   ✅ MENSAJES
+========================= */
+
+.success{
+  color:green;
+}
+
+.error{
+  color:red;
+}
