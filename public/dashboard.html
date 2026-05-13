@@ -3,7 +3,7 @@
 /* =========================
    CONFIG
 ========================= */
-const API_URL = "http://localhost:3001/api/v1";
+const API_URL = "http://https://dhomei-backend.onrender.com/api/v1";
 
 /* =========================
    JWT UTILS
@@ -382,7 +382,7 @@ async function showMyProperties(){
     properties.forEach(p=>{
       html += `
       <div class="property-card">
-        <img src="http://localhost:3001/${p.images?.[0] || ''}">
+        <img src="http://https://dhomei-backend.onrender.com/${p.images?.[0] || ''}">
         <strong>${p.title}</strong><br>
         ${p.location}<br>
         S/ ${Number(p.price).toLocaleString()}

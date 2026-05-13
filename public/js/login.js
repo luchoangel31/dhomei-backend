@@ -1,6 +1,6 @@
 console.log("✅ login.js cargado");
 
-const API_URL = "http://localhost:3001/api/v1/auth/login";
+const API_URL = "http://https://dhomei-backend.onrender.com/api/v1/auth/login";
 
 // 🔁 AUTO REDIRECT SI YA ESTÁ LOGUEADO
 (function () {
