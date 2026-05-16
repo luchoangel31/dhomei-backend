@@ -8,7 +8,7 @@
 <title>Dhomei - Registro</title>
 
 <!-- CSS GLOBAL -->
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="./css/style.css">
 
 </head>
 
@@ -64,15 +64,15 @@
 </div>
 
 <!-- NAVBAR -->
-<script src="/js/navbar.js"></script>
+<script src="./js/navbar.js"></script>
 
 <script>
 
-const API_URL = "http://https://dhomei-backend.onrender.com/api/v1/auth/register";
+const API_URL = "https://dhomei-backend.onrender.com/api/v1/auth/register";
 
 // 🔁 SI YA ESTÁ LOGUEADO
 if(localStorage.getItem("accessToken")){
-    window.location.href="dashboard.html";
+    window.location.href = "dashboard.html";
 }
 
 document
@@ -131,11 +131,11 @@ async function registrar(e){
             return;
         }
 
-        // 🔥 COMPATIBLE BACKEND (robusto)
+        // TOKENS
         const accessToken = data?.data?.accessToken || data?.accessToken;
         const refreshToken = data?.data?.refreshToken || data?.refreshToken;
 
-        // 🔥 SOPORTA AMBOS FORMATOS
+        // SESSION ID
         const sessionId =
             data?.data?.sessionId ||
             data?.sessionId ||
@@ -150,7 +150,6 @@ async function registrar(e){
             localStorage.setItem("refreshToken", refreshToken);
         }
 
-        // 🔥 GUARDAR sessionId
         if(sessionId){
             localStorage.setItem("sessionId", sessionId);
         }
@@ -160,12 +159,14 @@ async function registrar(e){
             ✅ Registro exitoso
         </div>`;
 
-        // 🚀 REDIRECCIÓN
+        // REDIRECCIÓN
         setTimeout(()=>{
-            window.location.href="dashboard.html";
+            window.location.href = "dashboard.html";
         },1000);
 
     } catch(error){
+
+        console.error(error);
 
         messageDiv.innerHTML =
         `<div class="error">
