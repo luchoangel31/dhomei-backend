@@ -3,7 +3,7 @@
 /* =========================
    CONFIG
 ========================= */
-const API_URL = "http://https://dhomei-backend.onrender.com/api/v1";
+const API_URL = "https://dhomei-backend.onrender.com/api/v1";
 
 /* =========================
    JWT UTILS
@@ -18,12 +18,14 @@ function parseJwt(token){
 
 function isExpired(token){
   const payload = parseJwt(token);
+
   if(!payload) return true;
+
   return payload.exp * 1000 < Date.now();
 }
 
 /* =========================
-   DEVICE PARSER 🔥 NUEVO
+   DEVICE PARSER
 ========================= */
 function getDeviceInfo(userAgent = ""){
 
@@ -31,76 +33,105 @@ function getDeviceInfo(userAgent = ""){
 
   let browser = "Desconocido";
 
-  if(ua.includes("chrome") && !ua.includes("edg")) browser = "Chrome";
-  else if(ua.includes("firefox")) browser = "Firefox";
-  else if(ua.includes("safari") && !ua.includes("chrome")) browser = "Safari";
-  else if(ua.includes("edg")) browser = "Edge";
+  if(ua.includes("chrome") && !ua.includes("edg")){
+    browser = "Chrome";
+  }else if(ua.includes("firefox")){
+    browser = "Firefox";
+  }else if(ua.includes("safari") && !ua.includes("chrome")){
+    browser = "Safari";
+  }else if(ua.includes("edg")){
+    browser = "Edge";
+  }
 
   let device = "💻 Desktop";
-  if(/mobile|android|iphone/.test(ua)) device = "📱 Móvil";
-  if(/tablet|ipad/.test(ua)) device = "📲 Tablet";
+
+  if(/mobile|android|iphone/.test(ua)){
+    device = "📱 Móvil";
+  }
+
+  if(/tablet|ipad/.test(ua)){
+    device = "📲 Tablet";
+  }
 
   return { browser, device };
 }
 
 /* =========================
-   🔥 REFRESH TOKEN (CON sessionId)
+   REFRESH TOKEN
 ========================= */
 async function refreshAccessToken(){
 
   const refreshToken = localStorage.getItem("refreshToken");
-  if(!refreshToken) return null;
+
+  if(!refreshToken){
+    return null;
+  }
 
   try{
+
     const res = await fetch(`${API_URL}/auth/refresh`,{
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ refreshToken })
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        refreshToken
+      })
     });
 
     const data = await res.json();
 
-    if(!res.ok) throw new Error();
+    if(!res.ok){
+      throw new Error();
+    }
 
     const newAccessToken = data.accessToken;
     const newRefreshToken = data.refreshToken;
-    const sessionId = data.sessionId; // 🔥 NUEVO
+    const sessionId = data.sessionId;
 
-    if(!newAccessToken) throw new Error();
+    if(!newAccessToken){
+      throw new Error();
+    }
 
     localStorage.setItem("accessToken", newAccessToken);
 
-    // 🔥 ROTACIÓN REAL
     if(newRefreshToken){
       localStorage.setItem("refreshToken", newRefreshToken);
     }
 
-    // 🔥 GUARDAR SESSION ID
     if(sessionId){
       localStorage.setItem("sessionId", sessionId);
     }
 
-    console.log("🔄 Token renovado + sessionId");
+    console.log("🔄 Token renovado");
 
     return newAccessToken;
 
-  }catch{
+  }catch(error){
+
+    console.error(error);
+
     localStorage.clear();
+
     return null;
   }
 }
 
 /* =========================
-   GET TOKEN
+   GET VALID TOKEN
 ========================= */
 async function getValidToken(){
 
   let token = localStorage.getItem("accessToken");
 
-  if(!token) return null;
+  if(!token){
+    return null;
+  }
 
   if(isExpired(token)){
-    console.log("⛔ Token expirado → refresh");
+
+    console.log("⛔ Token expirado");
+
     return await refreshAccessToken();
   }
 
@@ -108,7 +139,7 @@ async function getValidToken(){
 }
 
 /* =========================
-   FETCH PRO
+   FETCH AUTH
 ========================= */
 async function fetchWithAuth(url, options = {}){
 
@@ -131,7 +162,11 @@ async function fetchWithAuth(url, options = {}){
     const newToken = await refreshAccessToken();
 
     if(!newToken){
+
+      localStorage.clear();
+
       window.location.href = "login.html";
+
       return;
     }
 
@@ -151,32 +186,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================
-   VALIDAR SESIÓN
+   VALIDAR SESION
 ========================= */
 async function validateSession(){
 
-  const res = await fetchWithAuth(`${API_URL}/auth/perfil`);
-
-  if(!res){
-    window.location.href="login.html";
-    return;
-  }
-
   try{
 
+    const res = await fetchWithAuth(`${API_URL}/auth/perfil`);
+
+    if(!res){
+
+      window.location.href = "login.html";
+
+      return;
+    }
+
     const data = await res.json();
+
     const user = data?.data?.user || data?.user || data;
 
-    if(!user || !user.email) throw new Error();
+    if(!user || !user.email){
+      throw new Error();
+    }
 
-    document.getElementById("welcome")
-      .innerText = "Bienvenido " + user.email;
+    document.getElementById("welcome").innerText =
+      "Bienvenido " + user.email;
 
     showHome();
 
-  }catch{
+  }catch(error){
+
+    console.error(error);
+
     localStorage.clear();
-    window.location.href="login.html";
+
+    window.location.href = "login.html";
   }
 }
 
@@ -184,50 +228,66 @@ async function validateSession(){
    HOME
 ========================= */
 function showHome(){
-  contentArea.innerHTML=`
+
+  contentArea.innerHTML = `
   <div class="card">
+
     <h2>📊 Panel Dhomei</h2>
+
     <p>Gestiona tus propiedades de forma profesional.</p>
 
     <button class="primary" onclick="showSessions()">
       📱 Ver sesiones activas
     </button>
 
-    <button class="primary" onclick="logoutAll()" style="margin-top:10px;background:#b91c1c;">
+    <button
+      class="primary"
+      onclick="logoutAll()"
+      style="margin-top:10px;background:#b91c1c;"
+    >
       🚨 Cerrar todas las sesiones
     </button>
+
   </div>`;
 }
 
 /* =========================
-   SESIONES 🔥 CON sessionId REAL
+   SESIONES
 ========================= */
 async function showSessions(){
 
-  contentArea.innerHTML = `<div class="loading">⏳ Cargando sesiones...</div>`;
+  contentArea.innerHTML =
+    `<div class="loading">⏳ Cargando sesiones...</div>`;
 
   try{
 
     const res = await fetchWithAuth(`${API_URL}/auth/sessions`);
+
     const data = await res.json();
 
     const sessions = data.sessions || [];
 
-    // 🔥 NUEVO MÉTODO SEGURO
-    const currentSessionId = localStorage.getItem("sessionId");
+    const currentSessionId =
+      localStorage.getItem("sessionId");
 
-    let html = `<div class="card"><h2>📱 Sesiones activas</h2>`;
+    let html = `
+    <div class="card">
+      <h2>📱 Sesiones activas</h2>
+    `;
 
     if(!sessions.length){
+
       html += `<p>No hay sesiones activas</p>`;
+
     }else{
 
-      sessions.forEach(s=>{
+      sessions.forEach(s => {
 
-        // 🔥 DETECCIÓN REAL
-        const isCurrent = s.id == currentSessionId;
+        const isCurrent =
+          s.id == currentSessionId;
 
-        const { browser, device } = getDeviceInfo(s.device);
+        const { browser, device } =
+          getDeviceInfo(s.device);
 
         html += `
         <div style="
@@ -242,17 +302,33 @@ async function showSessions(){
 
           🌐 ${s.ip || 'IP desconocida'}<br>
           📍 ${s.location || 'Sin ubicación'}<br>
-          🕒 ${new Date(s.createdAt).toLocaleString()}<br>
+          🕒 ${new Date(s.createdAt).toLocaleString()}<br><br>
 
           ${
             isCurrent
-            ? `<span style="color:#16a34a;font-weight:bold;">✔ Esta es tu sesión actual</span><br>
-               <button onclick="logoutCurrentSession()" style="margin-top:5px;background:#dc2626;color:white;border:none;padding:6px 10px;border-radius:6px;">
-                  Cerrar esta sesión
-               </button>`
-            : `<button onclick="logoutSession('${s.id}')" style="margin-top:5px;">
-                  Cerrar sesión
-               </button>`
+            ? `
+              <span style="color:#16a34a;font-weight:bold;">
+                ✔ Esta es tu sesión actual
+              </span><br><br>
+
+              <button
+                onclick="logoutCurrentSession()"
+                style="
+                  background:#dc2626;
+                  color:white;
+                  border:none;
+                  padding:6px 10px;
+                  border-radius:6px;
+                "
+              >
+                Cerrar esta sesión
+              </button>
+            `
+            : `
+              <button onclick="logoutSession('${s.id}')">
+                Cerrar sesión
+              </button>
+            `
           }
 
         </div>`;
@@ -263,43 +339,64 @@ async function showSessions(){
 
     contentArea.innerHTML = html;
 
-  }catch{
-    contentArea.innerHTML = `<div class="error">Error cargando sesiones</div>`;
+  }catch(error){
+
+    console.error(error);
+
+    contentArea.innerHTML =
+      `<div class="error">Error cargando sesiones</div>`;
   }
 }
 
 /* =========================
-   LOGOUT SESIÓN ACTUAL
+   LOGOUT SESION ACTUAL
 ========================= */
 async function logoutCurrentSession(){
 
-  const refreshToken = localStorage.getItem("refreshToken");
+  const refreshToken =
+    localStorage.getItem("refreshToken");
 
   try{
+
     await fetch(`${API_URL}/auth/logout`,{
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ refreshToken })
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        refreshToken
+      })
     });
-  }catch{}
+
+  }catch(error){
+    console.error(error);
+  }
 
   localStorage.clear();
-  window.location.href="login.html";
+
+  window.location.href = "login.html";
 }
 
 /* =========================
-   LOGOUT OTRA SESIÓN
+   LOGOUT OTRA SESION
 ========================= */
 async function logoutSession(sessionId){
 
   try{
-    await fetchWithAuth(`${API_URL}/auth/sessions/${sessionId}`,{
-      method:"DELETE"
-    });
+
+    await fetchWithAuth(
+      `${API_URL}/auth/sessions/${sessionId}`,
+      {
+        method:"DELETE"
+      }
+    );
 
     showSessions();
 
-  }catch{
+  }catch(error){
+
+    console.error(error);
+
     alert("Error cerrando sesión");
   }
 }
@@ -308,31 +405,55 @@ async function logoutSession(sessionId){
    FORM
 ========================= */
 function showForm(){
-  contentArea.innerHTML=`
+
+  contentArea.innerHTML = `
   <div class="card">
+
     <h2>Publicar Propiedad</h2>
 
     <input id="title" placeholder="Título">
+
     <input id="location" placeholder="Ubicación">
-    <input id="price" type="number" placeholder="Precio">
-    <textarea id="description" placeholder="Descripción"></textarea>
 
-    <input type="file" id="images" multiple>
+    <input
+      id="price"
+      type="number"
+      placeholder="Precio"
+    >
 
-    <button class="primary" onclick="createProperty()">Publicar</button>
+    <textarea
+      id="description"
+      placeholder="Descripción"
+    ></textarea>
+
+    <input
+      type="file"
+      id="images"
+      multiple
+    >
+
+    <button
+      class="primary"
+      onclick="createProperty()"
+    >
+      Publicar
+    </button>
 
     <div id="message"></div>
+
   </div>`;
 }
 
 /* =========================
-   CREAR
+   CREAR PROPIEDAD
 ========================= */
 async function createProperty(){
 
-  const message = document.getElementById("message");
+  const message =
+    document.getElementById("message");
 
-  message.innerHTML = `<div class="loading">⏳ Publicando...</div>`;
+  message.innerHTML =
+    `<div class="loading">⏳ Publicando...</div>`;
 
   const formData = new FormData();
 
@@ -341,7 +462,8 @@ async function createProperty(){
   formData.append("price", price.value);
   formData.append("description", description.value);
 
-  const files = document.getElementById("images").files;
+  const files =
+    document.getElementById("images").files;
 
   for(let file of files){
     formData.append("images", file);
@@ -349,19 +471,29 @@ async function createProperty(){
 
   try{
 
-    const res = await fetchWithAuth(`${API_URL}/properties`,{
-      method:"POST",
-      body: formData
-    });
+    const res = await fetchWithAuth(
+      `${API_URL}/properties`,
+      {
+        method:"POST",
+        body: formData
+      }
+    );
 
-    if(!res.ok) throw new Error();
+    if(!res.ok){
+      throw new Error();
+    }
 
-    message.innerHTML = `<div class="success">✅ Publicado</div>`;
+    message.innerHTML =
+      `<div class="success">✅ Publicado</div>`;
 
     showMyProperties();
 
-  }catch{
-    message.innerHTML = `<div class="error">Error al publicar</div>`;
+  }catch(error){
+
+    console.error(error);
+
+    message.innerHTML =
+      `<div class="error">Error al publicar</div>`;
   }
 }
 
@@ -370,22 +502,34 @@ async function createProperty(){
 ========================= */
 async function showMyProperties(){
 
-  contentArea.innerHTML = `<div class="loading">⏳ Cargando...</div>`;
+  contentArea.innerHTML =
+    `<div class="loading">⏳ Cargando...</div>`;
 
   try{
 
-    const res = await fetchWithAuth(`${API_URL}/properties/my`);
-    const properties = await res.json();
+    const res =
+      await fetchWithAuth(`${API_URL}/properties/my`);
+
+    const properties =
+      await res.json();
 
     let html = `<div class="grid">`;
 
-    properties.forEach(p=>{
+    properties.forEach(p => {
+
       html += `
       <div class="property-card">
-        <img src="http://https://dhomei-backend.onrender.com/${p.images?.[0] || ''}">
+
+        <img
+          src="https://dhomei-backend.onrender.com/${p.images?.[0] || ''}"
+        >
+
         <strong>${p.title}</strong><br>
+
         ${p.location}<br>
+
         S/ ${Number(p.price).toLocaleString()}
+
       </div>`;
     });
 
@@ -393,8 +537,12 @@ async function showMyProperties(){
 
     contentArea.innerHTML = html;
 
-  }catch{
-    contentArea.innerHTML = `<div class="error">Error cargando propiedades</div>`;
+  }catch(error){
+
+    console.error(error);
+
+    contentArea.innerHTML =
+      `<div class="error">Error cargando propiedades</div>`;
   }
 }
 
@@ -404,13 +552,21 @@ async function showMyProperties(){
 async function logoutAll(){
 
   try{
-    await fetchWithAuth(`${API_URL}/auth/logout-all`,{
-      method:"POST"
-    });
-  }catch{}
+
+    await fetchWithAuth(
+      `${API_URL}/auth/logout-all`,
+      {
+        method:"POST"
+      }
+    );
+
+  }catch(error){
+    console.error(error);
+  }
 
   localStorage.clear();
-  window.location.href="login.html";
+
+  window.location.href = "login.html";
 }
 
 </script>
