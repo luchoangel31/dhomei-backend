@@ -1,13 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dhomei - Dashboard</title>
+
+<link rel="stylesheet" href="./css/style.css">
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#f5f5f5;
+    margin:0;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.menu button{
+    margin-right:10px;
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:20px;
+}
+
+.property-card{
+    background:white;
+    padding:10px;
+    border-radius:10px;
+}
+
+.property-card img{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:8px;
+}
+
+input,
+textarea{
+    width:100%;
+    margin-bottom:10px;
+    padding:10px;
+}
+
+.primary{
+    background:#111827;
+    color:white;
+}
+
+.loading{
+    padding:20px;
+}
+
+.error{
+    color:red;
+}
+
+.success{
+    color:green;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+
+        <h2 id="welcome">
+            Cargando...
+        </h2>
+
+        <div class="menu">
+
+            <button onclick="showHome()">
+                Inicio
+            </button>
+
+            <button onclick="showForm()">
+                Publicar
+            </button>
+
+            <button onclick="showMyProperties()">
+                Mis propiedades
+            </button>
+
+            <button onclick="logoutAll()">
+                Salir
+            </button>
+
+        </div>
+
+    </div>
+
+    <div id="contentArea"></div>
+
+</div>
+
 <script>
 
-/* =========================
-   CONFIG
-========================= */
 const API_URL = "https://dhomei-backend.onrender.com/api/v1";
 
+const contentArea =
+document.getElementById("contentArea");
+
 /* =========================
-   JWT UTILS
+   JWT
 ========================= */
+
 function parseJwt(token){
   try{
     return JSON.parse(atob(token.split('.')[1]));
@@ -17,6 +148,7 @@ function parseJwt(token){
 }
 
 function isExpired(token){
+
   const payload = parseJwt(token);
 
   if(!payload) return true;
@@ -25,43 +157,13 @@ function isExpired(token){
 }
 
 /* =========================
-   DEVICE PARSER
+   REFRESH
 ========================= */
-function getDeviceInfo(userAgent = ""){
 
-  const ua = userAgent.toLowerCase();
-
-  let browser = "Desconocido";
-
-  if(ua.includes("chrome") && !ua.includes("edg")){
-    browser = "Chrome";
-  }else if(ua.includes("firefox")){
-    browser = "Firefox";
-  }else if(ua.includes("safari") && !ua.includes("chrome")){
-    browser = "Safari";
-  }else if(ua.includes("edg")){
-    browser = "Edge";
-  }
-
-  let device = "💻 Desktop";
-
-  if(/mobile|android|iphone/.test(ua)){
-    device = "📱 Móvil";
-  }
-
-  if(/tablet|ipad/.test(ua)){
-    device = "📲 Tablet";
-  }
-
-  return { browser, device };
-}
-
-/* =========================
-   REFRESH TOKEN
-========================= */
 async function refreshAccessToken(){
 
-  const refreshToken = localStorage.getItem("refreshToken");
+  const refreshToken =
+  localStorage.getItem("refreshToken");
 
   if(!refreshToken){
     return null;
@@ -69,15 +171,18 @@ async function refreshAccessToken(){
 
   try{
 
-    const res = await fetch(`${API_URL}/auth/refresh`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        refreshToken
-      })
-    });
+    const res = await fetch(
+      `${API_URL}/auth/refresh`,
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+          refreshToken
+        })
+      }
+    );
 
     const data = await res.json();
 
@@ -85,27 +190,19 @@ async function refreshAccessToken(){
       throw new Error();
     }
 
-    const newAccessToken = data.accessToken;
-    const newRefreshToken = data.refreshToken;
-    const sessionId = data.sessionId;
+    localStorage.setItem(
+      "accessToken",
+      data.accessToken
+    );
 
-    if(!newAccessToken){
-      throw new Error();
+    if(data.refreshToken){
+      localStorage.setItem(
+        "refreshToken",
+        data.refreshToken
+      );
     }
 
-    localStorage.setItem("accessToken", newAccessToken);
-
-    if(newRefreshToken){
-      localStorage.setItem("refreshToken", newRefreshToken);
-    }
-
-    if(sessionId){
-      localStorage.setItem("sessionId", sessionId);
-    }
-
-    console.log("🔄 Token renovado");
-
-    return newAccessToken;
+    return data.accessToken;
 
   }catch(error){
 
@@ -118,20 +215,19 @@ async function refreshAccessToken(){
 }
 
 /* =========================
-   GET VALID TOKEN
+   TOKEN
 ========================= */
+
 async function getValidToken(){
 
-  let token = localStorage.getItem("accessToken");
+  let token =
+  localStorage.getItem("accessToken");
 
   if(!token){
     return null;
   }
 
   if(isExpired(token)){
-
-    console.log("⛔ Token expirado");
-
     return await refreshAccessToken();
   }
 
@@ -141,12 +237,19 @@ async function getValidToken(){
 /* =========================
    FETCH AUTH
 ========================= */
-async function fetchWithAuth(url, options = {}){
+
+async function fetchWithAuth(
+  url,
+  options = {}
+){
 
   let token = await getValidToken();
 
   if(!token){
-    window.location.href = "login.html";
+
+    window.location.href =
+    "login.html";
+
     return;
   }
 
@@ -155,62 +258,48 @@ async function fetchWithAuth(url, options = {}){
     Authorization: `Bearer ${token}`
   };
 
-  let res = await fetch(url, options);
-
-  if(res.status === 401){
-
-    const newToken = await refreshAccessToken();
-
-    if(!newToken){
-
-      localStorage.clear();
-
-      window.location.href = "login.html";
-
-      return;
-    }
-
-    options.headers.Authorization = `Bearer ${newToken}`;
-
-    res = await fetch(url, options);
-  }
-
-  return res;
+  return await fetch(url, options);
 }
 
 /* =========================
    INIT
 ========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  validateSession();
-});
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    validateSession();
+  }
+);
 
 /* =========================
    VALIDAR SESION
 ========================= */
+
 async function validateSession(){
 
   try{
 
-    const res = await fetchWithAuth(`${API_URL}/auth/perfil`);
-
-    if(!res){
-
-      window.location.href = "login.html";
-
-      return;
-    }
+    const res =
+    await fetchWithAuth(
+      `${API_URL}/auth/perfil`
+    );
 
     const data = await res.json();
 
-    const user = data?.data?.user || data?.user || data;
+    const user =
+      data?.data?.user ||
+      data?.user ||
+      data;
 
-    if(!user || !user.email){
+    if(!user?.email){
       throw new Error();
     }
 
-    document.getElementById("welcome").innerText =
-      "Bienvenido " + user.email;
+    document.getElementById(
+      "welcome"
+    ).innerText =
+    "Bienvenido " + user.email;
 
     showHome();
 
@@ -220,317 +309,118 @@ async function validateSession(){
 
     localStorage.clear();
 
-    window.location.href = "login.html";
+    window.location.href =
+    "login.html";
   }
 }
 
 /* =========================
    HOME
 ========================= */
+
 function showHome(){
 
   contentArea.innerHTML = `
-  <div class="card">
-
-    <h2>📊 Panel Dhomei</h2>
-
-    <p>Gestiona tus propiedades de forma profesional.</p>
-
-    <button class="primary" onclick="showSessions()">
-      📱 Ver sesiones activas
-    </button>
-
-    <button
-      class="primary"
-      onclick="logoutAll()"
-      style="margin-top:10px;background:#b91c1c;"
-    >
-      🚨 Cerrar todas las sesiones
-    </button>
-
-  </div>`;
-}
-
-/* =========================
-   SESIONES
-========================= */
-async function showSessions(){
-
-  contentArea.innerHTML =
-    `<div class="loading">⏳ Cargando sesiones...</div>`;
-
-  try{
-
-    const res = await fetchWithAuth(`${API_URL}/auth/sessions`);
-
-    const data = await res.json();
-
-    const sessions = data.sessions || [];
-
-    const currentSessionId =
-      localStorage.getItem("sessionId");
-
-    let html = `
     <div class="card">
-      <h2>📱 Sesiones activas</h2>
-    `;
 
-    if(!sessions.length){
+      <h2>
+        📊 Panel Dhomei
+      </h2>
 
-      html += `<p>No hay sesiones activas</p>`;
+      <p>
+        Sistema funcionando correctamente.
+      </p>
 
-    }else{
-
-      sessions.forEach(s => {
-
-        const isCurrent =
-          s.id == currentSessionId;
-
-        const { browser, device } =
-          getDeviceInfo(s.device);
-
-        html += `
-        <div style="
-          margin-bottom:12px;
-          padding:12px;
-          border:1px solid #eee;
-          border-radius:10px;
-          background:${isCurrent ? "#ecfdf5" : "white"};
-        ">
-
-          <strong>${device} - ${browser}</strong><br>
-
-          🌐 ${s.ip || 'IP desconocida'}<br>
-          📍 ${s.location || 'Sin ubicación'}<br>
-          🕒 ${new Date(s.createdAt).toLocaleString()}<br><br>
-
-          ${
-            isCurrent
-            ? `
-              <span style="color:#16a34a;font-weight:bold;">
-                ✔ Esta es tu sesión actual
-              </span><br><br>
-
-              <button
-                onclick="logoutCurrentSession()"
-                style="
-                  background:#dc2626;
-                  color:white;
-                  border:none;
-                  padding:6px 10px;
-                  border-radius:6px;
-                "
-              >
-                Cerrar esta sesión
-              </button>
-            `
-            : `
-              <button onclick="logoutSession('${s.id}')">
-                Cerrar sesión
-              </button>
-            `
-          }
-
-        </div>`;
-      });
-    }
-
-    html += `</div>`;
-
-    contentArea.innerHTML = html;
-
-  }catch(error){
-
-    console.error(error);
-
-    contentArea.innerHTML =
-      `<div class="error">Error cargando sesiones</div>`;
-  }
-}
-
-/* =========================
-   LOGOUT SESION ACTUAL
-========================= */
-async function logoutCurrentSession(){
-
-  const refreshToken =
-    localStorage.getItem("refreshToken");
-
-  try{
-
-    await fetch(`${API_URL}/auth/logout`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        refreshToken
-      })
-    });
-
-  }catch(error){
-    console.error(error);
-  }
-
-  localStorage.clear();
-
-  window.location.href = "login.html";
-}
-
-/* =========================
-   LOGOUT OTRA SESION
-========================= */
-async function logoutSession(sessionId){
-
-  try{
-
-    await fetchWithAuth(
-      `${API_URL}/auth/sessions/${sessionId}`,
-      {
-        method:"DELETE"
-      }
-    );
-
-    showSessions();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert("Error cerrando sesión");
-  }
+    </div>
+  `;
 }
 
 /* =========================
    FORM
 ========================= */
+
 function showForm(){
 
   contentArea.innerHTML = `
-  <div class="card">
+    <div class="card">
 
-    <h2>Publicar Propiedad</h2>
+      <h2>Publicar propiedad</h2>
 
-    <input id="title" placeholder="Título">
+      <input id="title" placeholder="Título">
 
-    <input id="location" placeholder="Ubicación">
+      <input id="location" placeholder="Ubicación">
 
-    <input
-      id="price"
-      type="number"
-      placeholder="Precio"
-    >
+      <input
+        id="price"
+        type="number"
+        placeholder="Precio"
+      >
 
-    <textarea
-      id="description"
-      placeholder="Descripción"
-    ></textarea>
+      <textarea
+        id="description"
+        placeholder="Descripción"
+      ></textarea>
 
-    <input
-      type="file"
-      id="images"
-      multiple
-    >
+      <input
+        type="file"
+        id="images"
+        multiple
+      >
 
-    <button
-      class="primary"
-      onclick="createProperty()"
-    >
-      Publicar
-    </button>
+      <button
+        class="primary"
+        onclick="createProperty()"
+      >
+        Publicar
+      </button>
 
-    <div id="message"></div>
+      <div id="message"></div>
 
-  </div>`;
+    </div>
+  `;
 }
 
 /* =========================
-   CREAR PROPIEDAD
+   PROPIEDADES
 ========================= */
-async function createProperty(){
 
-  const message =
-    document.getElementById("message");
-
-  message.innerHTML =
-    `<div class="loading">⏳ Publicando...</div>`;
-
-  const formData = new FormData();
-
-  formData.append("title", title.value);
-  formData.append("location", location.value);
-  formData.append("price", price.value);
-  formData.append("description", description.value);
-
-  const files =
-    document.getElementById("images").files;
-
-  for(let file of files){
-    formData.append("images", file);
-  }
-
-  try{
-
-    const res = await fetchWithAuth(
-      `${API_URL}/properties`,
-      {
-        method:"POST",
-        body: formData
-      }
-    );
-
-    if(!res.ok){
-      throw new Error();
-    }
-
-    message.innerHTML =
-      `<div class="success">✅ Publicado</div>`;
-
-    showMyProperties();
-
-  }catch(error){
-
-    console.error(error);
-
-    message.innerHTML =
-      `<div class="error">Error al publicar</div>`;
-  }
-}
-
-/* =========================
-   MIS PROPIEDADES
-========================= */
 async function showMyProperties(){
 
   contentArea.innerHTML =
-    `<div class="loading">⏳ Cargando...</div>`;
+  `<div class="loading">
+    ⏳ Cargando...
+  </div>`;
 
   try{
 
     const res =
-      await fetchWithAuth(`${API_URL}/properties/my`);
+    await fetchWithAuth(
+      `${API_URL}/properties/my`
+    );
 
     const properties =
-      await res.json();
+    await res.json();
 
-    let html = `<div class="grid">`;
+    let html =
+    `<div class="grid">`;
 
     properties.forEach(p => {
 
       html += `
       <div class="property-card">
 
-        <img
-          src="https://dhomei-backend.onrender.com/${p.images?.[0] || ''}"
-        >
+        <img src="https://dhomei-backend.onrender.com/${p.images?.[0] || ''}">
 
-        <strong>${p.title}</strong><br>
+        <h3>${p.title}</h3>
 
-        ${p.location}<br>
+        <p>${p.location}</p>
 
-        S/ ${Number(p.price).toLocaleString()}
+        <strong>
+          S/ ${Number(p.price).toLocaleString()}
+        </strong>
 
-      </div>`;
+      </div>
+      `;
     });
 
     html += `</div>`;
@@ -542,31 +432,25 @@ async function showMyProperties(){
     console.error(error);
 
     contentArea.innerHTML =
-      `<div class="error">Error cargando propiedades</div>`;
+    `<div class="error">
+      Error cargando propiedades
+    </div>`;
   }
 }
 
 /* =========================
-   LOGOUT GLOBAL
+   LOGOUT
 ========================= */
-async function logoutAll(){
 
-  try{
-
-    await fetchWithAuth(
-      `${API_URL}/auth/logout-all`,
-      {
-        method:"POST"
-      }
-    );
-
-  }catch(error){
-    console.error(error);
-  }
+function logoutAll(){
 
   localStorage.clear();
 
-  window.location.href = "login.html";
+  window.location.href =
+  "login.html";
 }
 
 </script>
+
+</body>
+</html>
