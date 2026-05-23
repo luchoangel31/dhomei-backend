@@ -494,25 +494,63 @@ async function showMyProperties(){
       `${API_URL}/properties/my`
     );
 
-    const properties =
-    await res.json();
+    if(!res){
+      return;
+    }
 
-    let html =
-    `<div class="grid">`;
+    const data = await res.json();
+
+    console.log("📦 PROPERTIES:", data);
+
+    const properties =
+      data?.data?.properties ||
+      data?.properties ||
+      data ||
+      [];
+
+    if(!Array.isArray(properties)){
+
+      contentArea.innerHTML =
+      `<div class="error">
+        ❌ Formato inválido de propiedades
+      </div>`;
+
+      return;
+    }
+
+    if(properties.length === 0){
+
+      contentArea.innerHTML =
+      `
+      <div class="card">
+        <h2>📭 No tienes propiedades</h2>
+        <p>Publica tu primera propiedad.</p>
+      </div>
+      `;
+
+      return;
+    }
+
+    let html = `<div class="grid">`;
 
     properties.forEach(p => {
+
+      const image =
+        p.images?.[0]
+        ? `https://dhomei-backend.onrender.com/${p.images[0]}`
+        : "https://via.placeholder.com/400x250?text=Sin+Imagen";
 
       html += `
       <div class="property-card">
 
-        <img src="https://dhomei-backend.onrender.com/${p.images?.[0] || ''}">
+        <img src="${image}">
 
-        <h3>${p.title}</h3>
+        <h3>${p.title || 'Sin título'}</h3>
 
-        <p>${p.location}</p>
+        <p>${p.location || 'Sin ubicación'}</p>
 
         <strong>
-          S/ ${Number(p.price).toLocaleString()}
+          S/ ${Number(p.price || 0).toLocaleString()}
         </strong>
 
       </div>
@@ -529,7 +567,7 @@ async function showMyProperties(){
 
     contentArea.innerHTML =
     `<div class="error">
-      Error cargando propiedades
+      ❌ Error cargando propiedades
     </div>`;
   }
 }
