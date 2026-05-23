@@ -491,22 +491,17 @@ async function showMyProperties(){
 
     const res =
     await fetchWithAuth(
-      `${API_URL}/properties/my`
+      `${API_URL}/properties/my-properties`
     );
 
     if(!res){
       return;
     }
 
-    const data = await res.json();
-
-    console.log("📦 PROPERTIES:", data);
-
     const properties =
-      data?.data?.properties ||
-      data?.properties ||
-      data ||
-      [];
+    await res.json();
+
+    console.log("📦 PROPERTIES:", properties);
 
     if(!Array.isArray(properties)){
 
@@ -536,8 +531,8 @@ async function showMyProperties(){
     properties.forEach(p => {
 
       const image =
-        p.images?.[0]
-        ? `https://dhomei-backend.onrender.com/${p.images[0]}`
+        p.images?.[0]?.imageUrl
+        ? `https://dhomei-backend.onrender.com/${p.images[0].imageUrl}`
         : "https://via.placeholder.com/400x250?text=Sin+Imagen";
 
       html += `
@@ -547,7 +542,7 @@ async function showMyProperties(){
 
         <h3>${p.title || 'Sin título'}</h3>
 
-        <p>${p.location || 'Sin ubicación'}</p>
+        <p>${p.location || p.city || 'Sin ubicación'}</p>
 
         <strong>
           S/ ${Number(p.price || 0).toLocaleString()}
