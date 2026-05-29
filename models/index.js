@@ -11,14 +11,22 @@ const sequelize = require('../config/database');
 // ======================
 const UserModel = require('./User');
 const PropertyModel = require('./Property');
+const PropertyImageModel = require('./PropertyImage');
 const RefreshTokenModel = require('./RefreshToken');
 
 // ======================
 // ✅ INICIALIZAR MODELOS
 // ======================
 const User = UserModel(sequelize, DataTypes);
-const Property = PropertyModel(sequelize, DataTypes);
-const RefreshToken = RefreshTokenModel(sequelize, DataTypes); // 🔥 FIX CLAVE
+
+const Property =
+PropertyModel(sequelize, DataTypes);
+
+const PropertyImage =
+PropertyImageModel(sequelize, DataTypes);
+
+const RefreshToken =
+RefreshTokenModel(sequelize, DataTypes);
 
 // ======================
 // ✅ RELACIONES
@@ -36,7 +44,19 @@ Property.belongsTo(User, {
   as: 'owner'
 });
 
-// 🔐 USER → REFRESH TOKENS
+// PROPERTY → IMAGES
+Property.hasMany(PropertyImage, {
+  foreignKey: 'propertyId',
+  as: 'images',
+  onDelete: 'CASCADE'
+});
+
+PropertyImage.belongsTo(Property, {
+  foreignKey: 'propertyId',
+  as: 'property'
+});
+
+// USER → REFRESH TOKENS
 User.hasMany(RefreshToken, {
   foreignKey: 'userId',
   as: 'refreshTokens',
@@ -49,10 +69,6 @@ RefreshToken.belongsTo(User, {
 });
 
 // ======================
-// ❌ NADA DE SYNC AQUÍ
-// ======================
-
-// ======================
 // ✅ EXPORTAR
 // ======================
 module.exports = {
@@ -60,5 +76,6 @@ module.exports = {
   Sequelize,
   User,
   Property,
+  PropertyImage,
   RefreshToken
 };
