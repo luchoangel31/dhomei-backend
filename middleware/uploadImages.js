@@ -1,12 +1,26 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// configuración de almacenamiento
+// ======================
+// CREAR CARPETA UPLOADS
+// ======================
+
+const uploadsPath = path.join(__dirname, '../uploads');
+
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
+// ======================
+// STORAGE
+// ======================
+
 const storage = multer.diskStorage({
 
   destination: function (req, file, cb) {
 
-    cb(null, 'uploads/');
+    cb(null, uploadsPath);
 
   },
 
@@ -15,13 +29,19 @@ const storage = multer.diskStorage({
     const uniqueName =
       Date.now() + '-' + Math.round(Math.random() * 1E9);
 
-    cb(null, uniqueName + path.extname(file.originalname));
+    cb(
+      null,
+      uniqueName + path.extname(file.originalname)
+    );
 
   }
 
 });
 
-// filtro para permitir solo imágenes
+// ======================
+// FILTRO IMAGENES
+// ======================
+
 const fileFilter = (req, file, cb) => {
 
   const allowedTypes = /jpeg|jpg|png|webp/;
@@ -44,12 +64,18 @@ const fileFilter = (req, file, cb) => {
 
 };
 
+// ======================
+// MULTER
+// ======================
+
 const upload = multer({
 
   storage,
+
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: 5 * 1024 * 1024
   },
+
   fileFilter
 
 });
