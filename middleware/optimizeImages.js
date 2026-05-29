@@ -1,31 +1,81 @@
-const sharp = require("sharp")
-const path = require("path")
-const fs = require("fs")
+const sharp = require("sharp");
+const path = require("path");
+const fs = require("fs");
 
 const optimizeImages = async (req, res, next) => {
 
-  if (!req.files) return next()
+  try {
 
-  const optimizedImages = []
+    if (!req.files || req.files.length === 0) {
+      return next();
+    }
 
-  for (const file of req.files) {
+    // ======================
+    // CARPETA DESTINO
+    // ======================
 
-    const newFilename = "opt_" + Date.now() + ".webp"
-    const newPath = path.join("uploads/properties", newFilename)
+    const uploadDir = path.join(
+      __dirname,
+      "../uploads/properties"
+    );
 
-    await sharp(file.path)
-      .resize(1200) // tamaño máximo
-      .webp({ quality: 75 }) // compresión
-      .toFile(newPath)
+    // crear carpeta si no existe
+    if (!fs.existsSync(uploadDir)) {
 
-    fs.unlinkSync(file.path) // borra imagen original
+      fs.mkdirSync(uploadDir, {
+        recursive: true
+      });
 
-    optimizedImages.push(newFilename)
+    }
+
+    const optimizedImages = [];
+
+    // ======================
+    // OPTIMIZAR
+    // ======================
+
+    for (const file of req.files) {
+
+      const newFilename =
+        "opt_" +
+        Date.now() +
+        "_" +
+        Math.round(Math.random() * 1E9) +
+        ".webp";
+
+      const newPath = path.join(
+        uploadDir,
+        newFilename
+      );
+
+      await sharp(file.path)
+        .resize(1200)
+        .webp({ quality: 75 })
+        .toFile(newPath);
+
+      // borrar original
+      fs.unlinkSync(file.path);
+
+      optimizedImages.push(
+        `uploads/properties/${newFilename}`
+      );
+
+    }
+
+    req.optimizedImages = optimizedImages;
+
+    next();
+
+  } catch (error) {
+
+    console.error("🔥 ERROR OPTIMIZANDO:", error);
+
+    return res.status(500).json({
+      error: "Error procesando imágenes"
+    });
+
   }
 
-  req.optimizedImages = optimizedImages
+};
 
-  next()
-}
-
-module.exports = optimizeImages
+module.exports = optimizeImages;
