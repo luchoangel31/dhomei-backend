@@ -2,6 +2,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+console.log("🔥 UPLOAD IMAGES CARGADO");
+
 // ======================
 // 📁 CARPETA UPLOADS
 // ======================
@@ -10,6 +12,8 @@ const uploadDir = path.join(
   __dirname,
   '../uploads'
 );
+
+console.log("📁 Upload dir:", uploadDir);
 
 // Crear carpeta si no existe
 fs.mkdirSync(uploadDir, {
@@ -91,10 +95,7 @@ const upload = multer({
   storage,
 
   limits: {
-
-    fileSize:
-      5 * 1024 * 1024 // 5MB
-
+    fileSize: 5 * 1024 * 1024 // 5MB
   },
 
   fileFilter
