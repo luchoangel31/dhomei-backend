@@ -24,6 +24,11 @@ require('./models');
 const app = express();
 
 // =====================
+// 🔥 NECESARIO PARA RENDER
+// =====================
+app.set('trust proxy', 1);
+
+// =====================
 // 🔐 HELMET
 // =====================
 app.use(
@@ -50,11 +55,18 @@ app.use('/api', limiter);
 // =====================
 // 📁 UPLOADS
 // =====================
-const uploadsPath = path.join(__dirname, 'uploads');
+const uploadsPath = path.join(
+  __dirname,
+  'uploads'
+);
 
 if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath);
-  console.log("📁 Carpeta uploads creada");
+
+  fs.mkdirSync(uploadsPath, {
+    recursive: true
+  });
+
+  console.log('📁 Carpeta uploads creada');
 }
 
 // =====================
@@ -69,13 +81,23 @@ app.use(cors({
 // 🧩 MIDDLEWARE
 // =====================
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+  extended: true
+}));
 
 // =====================
 // 🖼️ ARCHIVOS ESTÁTICOS
 // =====================
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(uploadsPath));
+app.use(
+  express.static(
+    path.join(__dirname, 'public')
+  )
+);
+
+app.use(
+  '/uploads',
+  express.static(uploadsPath)
+);
 
 // =====================
 // ROUTERS API
@@ -92,60 +114,100 @@ app.use('/api/v1/protected', protectedRouter);
 // ❤️ HEALTH CHECK
 // =====================
 app.get('/health', (req, res) => {
+
   res.json({
     status: 'ok',
     message: 'API funcionando 🚀'
   });
+
 });
 
 // =====================
 // ❌ 404 SOLO API
 // =====================
 app.use('/api', (req, res) => {
+
   res.status(404).json({
     error: 'Ruta API no encontrada'
   });
+
 });
 
 // =====================
 // 🔥 ERROR GLOBAL
 // =====================
 app.use((err, req, res, next) => {
-  console.error('🔥 Error global:', err);
 
-  res.status(err.status || 500).json({
+  console.error(
+    '🔥 Error global:',
+    err
+  );
+
+  res.status(
+    err.status || 500
+  ).json({
+
     success: false,
-    error: err.message || 'Error interno del servidor'
+
+    error:
+      err.message ||
+      'Error interno del servidor'
+
   });
+
 });
 
 // =====================
 // 🚀 SERVER
 // =====================
-const PORT = process.env.PORT || 3001;
+const PORT =
+  process.env.PORT || 3001;
 
 async function startServer() {
+
   try {
 
-    console.log("🔌 Conectando a PostgreSQL...");
+    console.log(
+      '🔌 Conectando a PostgreSQL...'
+    );
 
     await sequelize.authenticate();
 
-    console.log('✅ PostgreSQL conectado correctamente');
+    console.log(
+      '✅ PostgreSQL conectado correctamente'
+    );
 
-    // 🔥🔥🔥 ESTA ES LA CLAVE
-    await sequelize.sync({ alter: true });
-    console.log('📦 Tablas sincronizadas');
+    await sequelize.sync({
+      alter: true
+    });
+
+    console.log(
+      '📦 Tablas sincronizadas'
+    );
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(`🌐 Frontend: http://localhost:${PORT}/login.html`);
+
+      console.log(
+        `🚀 Server running at http://localhost:${PORT}`
+      );
+
+      console.log(
+        `🌐 Frontend: http://localhost:${PORT}/login.html`
+      );
+
     });
 
   } catch (error) {
-    console.error('❌ Error inicializando DB:', error);
+
+    console.error(
+      '❌ Error inicializando DB:',
+      error
+    );
+
     process.exit(1);
+
   }
+
 }
 
 startServer();
