@@ -82,7 +82,8 @@ body{
 }
 
 input,
-textarea{
+textarea,
+select{
     width:100%;
     margin-bottom:10px;
     padding:10px;
@@ -388,9 +389,15 @@ function showForm(){
 
       <h2>Publicar propiedad</h2>
 
-      <input id="title" placeholder="Título">
+      <input
+        id="title"
+        placeholder="Título"
+      >
 
-      <input id="location" placeholder="Ubicación">
+      <textarea
+        id="description"
+        placeholder="Descripción"
+      ></textarea>
 
       <input
         id="price"
@@ -398,10 +405,70 @@ function showForm(){
         placeholder="Precio"
       >
 
-      <textarea
-        id="description"
-        placeholder="Descripción"
-      ></textarea>
+      <select id="operationType">
+
+        <option value="">
+          Tipo de operación
+        </option>
+
+        <option value="sale">
+          Venta
+        </option>
+
+        <option value="rent">
+          Alquiler
+        </option>
+
+      </select>
+
+      <select id="propertyType">
+
+        <option value="">
+          Tipo de propiedad
+        </option>
+
+        <option value="house">
+          Casa
+        </option>
+
+        <option value="apartment">
+          Departamento
+        </option>
+
+        <option value="land">
+          Terreno
+        </option>
+
+        <option value="office">
+          Oficina
+        </option>
+
+        <option value="commercial">
+          Local Comercial
+        </option>
+
+      </select>
+
+      <input
+        id="country"
+        placeholder="País"
+        value="Perú"
+      >
+
+      <input
+        id="city"
+        placeholder="Ciudad"
+      >
+
+      <input
+        id="district"
+        placeholder="Distrito"
+      >
+
+      <input
+        id="address"
+        placeholder="Dirección"
+      >
 
       <input
         type="file"
@@ -421,7 +488,6 @@ function showForm(){
     </div>
   `;
 }
-
 /* =========================
    CREAR
 ========================= */
@@ -433,49 +499,102 @@ async function createProperty(){
 
   const formData = new FormData();
 
-  formData.append("title", title.value);
-  formData.append("location", location.value);
-  formData.append("price", price.value);
-  formData.append("description", description.value);
+  formData.append(
+    "title",
+    document.getElementById("title").value
+  );
+
+  formData.append(
+    "description",
+    document.getElementById("description").value
+  );
+
+  formData.append(
+    "price",
+    document.getElementById("price").value
+  );
+
+  formData.append(
+    "operationType",
+    document.getElementById("operationType").value
+  );
+
+  formData.append(
+    "propertyType",
+    document.getElementById("propertyType").value
+  );
+
+  formData.append(
+    "country",
+    document.getElementById("country").value
+  );
+
+  formData.append(
+    "city",
+    document.getElementById("city").value
+  );
+
+  formData.append(
+    "district",
+    document.getElementById("district").value
+  );
+
+  formData.append(
+    "address",
+    document.getElementById("address").value
+  );
 
   const files =
   document.getElementById("images").files;
 
-  for(let file of files){
-    formData.append("images", file);
+  for (let file of files) {
+
+    formData.append(
+      "images",
+      file
+    );
+
   }
 
-  try{
+  try {
 
     const res =
     await fetchWithAuth(
       `${API_URL}/properties`,
       {
-        method:"POST",
-        body:formData
+        method: "POST",
+        body: formData
       }
     );
 
-    if(!res.ok){
-      throw new Error();
+    const data =
+    await res.json();
+
+    if (!res.ok) {
+
+      throw new Error(
+        data.error || "Error al publicar"
+      );
+
     }
 
-    message.innerHTML =
-    `<div class="success">
-      ✅ Publicado correctamente
-    </div>`;
+    message.innerHTML = `
+      <div class="success">
+        ✅ Propiedad publicada correctamente
+      </div>
+    `;
 
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
-    message.innerHTML =
-    `<div class="error">
-      ❌ Error al publicar
-    </div>`;
+    message.innerHTML = `
+      <div class="error">
+        ❌ ${error.message}
+      </div>
+    `;
   }
 }
-
 /* =========================
    PROPIEDADES
 ========================= */
