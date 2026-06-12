@@ -123,6 +123,37 @@ app.get('/health', (req, res) => {
 });
 
 // =====================
+// 🔍 DEBUG UPLOADS
+// =====================
+app.get('/debug/uploads', (req, res) => {
+
+  const propertiesDir = path.join(
+    __dirname,
+    'uploads',
+    'properties'
+  );
+
+  if (!fs.existsSync(propertiesDir)) {
+
+    return res.json({
+      exists: false,
+      message: 'La carpeta uploads/properties no existe'
+    });
+
+  }
+
+  const files =
+    fs.readdirSync(propertiesDir);
+
+  res.json({
+    exists: true,
+    total: files.length,
+    files
+  });
+
+});
+
+// =====================
 // ❌ 404 SOLO API
 // =====================
 app.use('/api', (req, res) => {
