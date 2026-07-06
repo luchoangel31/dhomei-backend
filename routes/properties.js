@@ -193,7 +193,6 @@ router.get('/my-properties', authMiddleware, async (req, res) => {
   }
 });
 
-
 // ===============================
 // ➕ CREAR PROPIEDAD + IMAGENES
 // ===============================
@@ -206,13 +205,31 @@ router.post(
 
     try {
 
+      console.log("=================================");
+      console.log("🚀 INICIO CREAR PROPIEDAD");
+      console.log("=================================");
+
+      console.log(
+        "📸 req.optimizedImages:",
+        req.optimizedImages
+      );
+
       if (!req.optimizedImages || req.optimizedImages.length < 3) {
+
+        console.log(
+          "❌ Menos de 3 imágenes recibidas"
+        );
 
         return res.status(400).json({
           error: "Debe subir mínimo 3 imágenes"
         });
 
       }
+
+      console.log(
+        "✅ Total imágenes:",
+        req.optimizedImages.length
+      );
 
       const property = await Property.create({
 
@@ -239,35 +256,63 @@ router.post(
 
       });
 
-      const images = req.optimizedImages.map(filename => ({
+      console.log(
+        "✅ Propiedad creada ID:",
+        property.id
+      );
 
-        imageUrl: filename,
+      const images = req.optimizedImages.map(url => ({
+
+        imageUrl: url,
         propertyId: property.id
 
       }));
 
-      await PropertyImage.bulkCreate(images);
+      console.log(
+        "📸 Imágenes preparadas para BD:"
+      );
 
-      res.status(201).json({
+      console.log(images);
 
-        message: "Propiedad creada con imágenes optimizadas",
+      const savedImages =
+        await PropertyImage.bulkCreate(images);
+
+      console.log(
+        "✅ Imágenes guardadas en BD:"
+      );
+
+      console.log(savedImages.length);
+
+      console.log("=================================");
+      console.log("🎉 PROPIEDAD COMPLETADA");
+      console.log("=================================");
+
+      return res.status(201).json({
+
+        message:
+          "Propiedad creada con imágenes optimizadas",
+
         property,
-        images
+
+        images: savedImages
 
       });
 
     } catch (error) {
 
+      console.error(
+        "🔥 ERROR CREANDO PROPIEDAD:"
+      );
+
       console.error(error);
 
-      res.status(500).json({
+      return res.status(500).json({
         error: "Error creando propiedad"
       });
 
     }
 
 });
-
 
 // ===============================
 // 🔎 VER PROPIEDAD

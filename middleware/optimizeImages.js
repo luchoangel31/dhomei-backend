@@ -1,66 +1,68 @@
 const sharp = require("sharp");
-const path = require("path");
 const fs = require("fs");
+const cloudinary = require("../config/cloudinary");
 
 const optimizeImages = async (req, res, next) => {
-
   try {
 
     if (!req.files || req.files.length === 0) {
       return next();
     }
 
-    // ======================
-    // CARPETA DESTINO
-    // ======================
-
-    const uploadDir = path.join(
-      __dirname,
-      "../uploads/properties"
-    );
-
-    // crear carpeta si no existe
-    if (!fs.existsSync(uploadDir)) {
-
-      fs.mkdirSync(uploadDir, {
-        recursive: true
-      });
-
-    }
-
     const optimizedImages = [];
-
-    // ======================
-    // OPTIMIZAR
-    // ======================
 
     for (const file of req.files) {
 
-      const newFilename =
-        "opt_" +
-        Date.now() +
-        "_" +
-        Math.round(Math.random() * 1E9) +
-        ".webp";
+      // Optimizar la imagen en memoria
+      const optimizedBuffer = await sharp(file.path)
+        .resize({
+          width: 1200,
+          withoutEnlargement: true
+        })
+        .webp({
+          quality: 75
+        })
+        .toBuffer();
 
-      const newPath = path.join(
-        uploadDir,
-        newFilename
-      );
+      // Subir a Cloudinary
+      const result = await new Promise((resolve, reject) => {
 
-      await sharp(file.path)
-        .resize(1200)
-        .webp({ quality: 75 })
-        .toFile(newPath);
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "properties",
+            resource_type: "image"
+          },
+          (error, result) => {
 
-      // borrar original
-      fs.unlinkSync(file.path);
+            if (error) {
+              return reject(error);
+            }
 
-      optimizedImages.push(
-        `uploads/properties/${newFilename}`
-      );
+            resolve(result);
+
+          }
+        );
+
+        stream.end(optimizedBuffer);
+
+      });
+
+      // DEBUG CLOUDINARY
+      console.log("✅ Imagen subida a Cloudinary:");
+      console.log(result.secure_url);
+
+      // Eliminar archivo temporal
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+
+      // Guardar URL
+      optimizedImages.push(result.secure_url);
 
     }
+
+    console.log("📸 URLs finales:");
+    console.log(optimizedImages);
 
     req.optimizedImages = optimizedImages;
 
@@ -75,7 +77,6 @@ const optimizeImages = async (req, res, next) => {
     });
 
   }
-
 };
 
 module.exports = optimizeImages;
