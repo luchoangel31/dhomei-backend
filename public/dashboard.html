@@ -651,7 +651,7 @@ async function showMyProperties(){
 
       const image =
         p.images?.[0]?.imageUrl
-        ? `https://dhomei-backend.onrender.com/${p.images[0].imageUrl}`
+        ? p.images[0].imageUrl
         : "https://via.placeholder.com/400x250?text=Sin+Imagen";
 
       html += `
