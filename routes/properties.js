@@ -358,7 +358,12 @@ router.get('/:id', async (req, res) => {
 // ===============================
 // ✏️ EDITAR PROPIEDAD
 // ===============================
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put(
+  '/:id',
+  authMiddleware,
+  upload.array('images', 5),
+  optimizeImages,
+  async (req, res) => {
   try {
 
     const property = await Property.findOne({
@@ -378,9 +383,50 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     }
 
-    await property.update(req.body);
+    const transaction = await Property.sequelize.transaction();
 
-    res.json(property);
+    try {
+
+      await property.update(req.body, { transaction });
+
+      if (req.optimizedImages && req.optimizedImages.length > 0) {
+
+        if (req.optimizedImages.length < 3) {
+
+          await transaction.rollback();
+
+          return res.status(400).json({
+            error: "Debe subir mÃ­nimo 3 imÃ¡genes para reemplazar las actuales"
+          });
+
+        }
+
+        await PropertyImage.destroy({
+          where: { propertyId: property.id },
+          transaction
+        });
+
+        await PropertyImage.bulkCreate(
+          req.optimizedImages.map(imageUrl => ({
+            imageUrl,
+            propertyId: property.id
+          })),
+          { transaction }
+        );
+
+      }
+
+      await transaction.commit();
+
+      res.json(property);
+
+    } catch (error) {
+
+      await transaction.rollback();
+
+      throw error;
+
+    }
 
   } catch (error) {
 
@@ -391,7 +437,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     });
 
   }
-});
+  }
+);
 
 
 // ===============================

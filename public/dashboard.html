@@ -163,6 +163,8 @@ const API_URL = "https://dhomei-backend.onrender.com/api/v1";
 const contentArea =
 document.getElementById("contentArea");
 
+let myProperties = [];
+
 /* =========================
    JWT
 ========================= */
@@ -382,12 +384,14 @@ function showHome(){
    FORM
 ========================= */
 
-function showForm(){
+function showForm(property = null){
+
+  const isEditing = Boolean(property);
 
   contentArea.innerHTML = `
     <div class="card">
 
-      <h2>Publicar propiedad</h2>
+      <h2>${isEditing ? "Editar propiedad" : "Publicar propiedad"}</h2>
 
       <input
         id="title"
@@ -474,19 +478,38 @@ function showForm(){
         type="file"
         id="images"
         multiple
+        accept="image/jpeg,image/png,image/webp"
       >
+
+      ${isEditing ? `
+        <p>Selecciona entre 3 y 5 fotos para reemplazar las actuales.</p>
+      ` : ""}
 
       <button
         class="primary"
-        onclick="createProperty()"
+        onclick="${isEditing ? `updateProperty(${property.id})` : "createProperty()"}"
       >
-        Publicar
+        ${isEditing ? "Guardar cambios" : "Publicar"}
       </button>
 
       <div id="message"></div>
 
     </div>
   `;
+
+  if(!isEditing){
+    return;
+  }
+
+  document.getElementById("title").value = property.title || "";
+  document.getElementById("description").value = property.description || "";
+  document.getElementById("price").value = property.price || "";
+  document.getElementById("operationType").value = property.operationType || "";
+  document.getElementById("propertyType").value = property.propertyType || "";
+  document.getElementById("country").value = property.country || "";
+  document.getElementById("city").value = property.city || "";
+  document.getElementById("district").value = property.district || "";
+  document.getElementById("address").value = property.address || "";
 }
 /* =========================
    CREAR
@@ -595,6 +618,78 @@ async function createProperty(){
     `;
   }
 }
+
+async function updateProperty(id){
+
+  const message =
+  document.getElementById("message");
+
+  const formData = new FormData();
+
+  formData.append("title", document.getElementById("title").value);
+  formData.append("description", document.getElementById("description").value);
+  formData.append("price", document.getElementById("price").value);
+  formData.append("operationType", document.getElementById("operationType").value);
+  formData.append("propertyType", document.getElementById("propertyType").value);
+  formData.append("country", document.getElementById("country").value);
+  formData.append("city", document.getElementById("city").value);
+  formData.append("district", document.getElementById("district").value);
+  formData.append("address", document.getElementById("address").value);
+
+  const files = document.getElementById("images").files;
+
+  if(files.length > 0 && (files.length < 3 || files.length > 5)){
+
+    message.innerHTML =
+    `<div class="error">
+      ❌ Selecciona entre 3 y 5 fotos para reemplazar las actuales.
+    </div>`;
+
+    return;
+  }
+
+  for(const file of files){
+    formData.append("images", file);
+  }
+
+  try{
+
+    const res =
+    await fetchWithAuth(
+      `${API_URL}/properties/${id}`,
+      {
+        method: "PUT",
+        body: formData
+      }
+    );
+
+    if(!res){
+      return;
+    }
+
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(
+        data.error || "Error al actualizar la propiedad"
+      );
+    }
+
+    message.innerHTML =
+    `<div class="success">
+      ✅ Propiedad actualizada correctamente
+    </div>`;
+
+  }catch(error){
+
+    console.error(error);
+
+    message.innerHTML =
+    `<div class="error">
+      ❌ ${error.message}
+    </div>`;
+  }
+}
 /* =========================
    PROPIEDADES
 ========================= */
@@ -631,6 +726,8 @@ async function showMyProperties(){
 
       return;
     }
+
+    myProperties = properties;
 
     if(properties.length === 0){
 
@@ -741,7 +838,16 @@ async function deleteProperty(id){
 }
 
 function editProperty(id){
-  console.log("Editar propiedad:", id);
+
+  const property = myProperties.find(
+    property => String(property.id) === String(id)
+  );
+
+  if(!property){
+    return;
+  }
+
+  showForm(property);
 }
 
 /* =========================
