@@ -74,6 +74,11 @@ body{
     box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
+.property-card.highlighted{
+    outline:3px solid #22c55e;
+    box-shadow:0 0 0 6px rgba(34,197,94,.2);
+}
+
 .property-card img{
     width:100%;
     height:180px;
@@ -164,6 +169,7 @@ const contentArea =
 document.getElementById("contentArea");
 
 let myProperties = [];
+let highlightedPropertyId = null;
 
 /* =========================
    JWT
@@ -675,10 +681,8 @@ async function updateProperty(id){
       );
     }
 
-    message.innerHTML =
-    `<div class="success">
-      ✅ Propiedad actualizada correctamente
-    </div>`;
+    highlightedPropertyId = id;
+    await showMyProperties();
 
   }catch(error){
 
@@ -729,6 +733,8 @@ async function showMyProperties(){
 
     myProperties = properties;
 
+    const propertyToHighlight = highlightedPropertyId;
+
     if(properties.length === 0){
 
       contentArea.innerHTML =
@@ -752,7 +758,10 @@ async function showMyProperties(){
         : "https://via.placeholder.com/400x250?text=Sin+Imagen";
 
       html += `
-      <div class="property-card">
+      <div
+        class="property-card${String(p.id) === String(propertyToHighlight) ? " highlighted" : ""}"
+        data-property-id="${p.id}"
+      >
 
         <img src="${image}">
 
@@ -779,6 +788,18 @@ async function showMyProperties(){
     html += `</div>`;
 
     contentArea.innerHTML = html;
+
+    if(propertyToHighlight !== null){
+
+      document.querySelector(
+        `[data-property-id="${propertyToHighlight}"]`
+      )?.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+      highlightedPropertyId = null;
+    }
 
   }catch(error){
 
