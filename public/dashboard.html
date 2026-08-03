@@ -667,6 +667,14 @@ async function showMyProperties(){
           S/ ${Number(p.price || 0).toLocaleString()}
         </strong>
 
+        <button onclick="editProperty('${p.id}')">
+          Editar
+        </button>
+
+        <button onclick="deleteProperty('${p.id}')">
+          Eliminar
+        </button>
+
       </div>
       `;
     });
@@ -684,6 +692,56 @@ async function showMyProperties(){
       ❌ Error cargando propiedades
     </div>`;
   }
+}
+
+async function deleteProperty(id){
+
+  const confirmed = window.confirm(
+    "¿Estás seguro de que deseas eliminar esta propiedad?"
+  );
+
+  if(!confirmed){
+    return;
+  }
+
+  try{
+
+    const res =
+    await fetchWithAuth(
+      `${API_URL}/properties/${id}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    if(!res){
+      return;
+    }
+
+    if(!res.ok){
+
+      const data = await res.json();
+
+      throw new Error(
+        data.error || "Error al eliminar la propiedad"
+      );
+    }
+
+    showMyProperties();
+
+  }catch(error){
+
+    console.error(error);
+
+    contentArea.innerHTML =
+    `<div class="error">
+      ❌ ${error.message}
+    </div>`;
+  }
+}
+
+function editProperty(id){
+  console.log("Editar propiedad:", id);
 }
 
 /* =========================
